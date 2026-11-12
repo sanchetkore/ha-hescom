@@ -24,7 +24,6 @@ from datetime import date, datetime, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UTC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import Store
@@ -347,7 +346,7 @@ class HescomCoordinator(DataUpdateCoordinator[HescomData]):
                 or date.min,
                 reverse=True,
             ),
-            last_success=dt_util.now(UTC),
+            last_success=dt_util.utcnow(),
             failures=failures,
         )
 
@@ -470,9 +469,9 @@ class HescomCoordinator(DataUpdateCoordinator[HescomData]):
 
         # Bills with no published PDF would otherwise be retried every cycle.
         last_try = self._pdf_attempts.get(bill_id)
-        if last_try is not None and dt_util.now(UTC) - last_try < PDF_RETRY_INTERVAL:
+        if last_try is not None and dt_util.utcnow() - last_try < PDF_RETRY_INTERVAL:
             return
-        self._pdf_attempts[bill_id] = dt_util.now(UTC)
+        self._pdf_attempts[bill_id] = dt_util.utcnow()
 
         url = await async_archive_bill(self.hass, self.api, bill_id)
         if url:
