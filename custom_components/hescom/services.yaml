@@ -1,0 +1,14 @@
+refresh:
+  name: Refresh
+  description: >-
+    Fetch the latest HESCOM data now instead of waiting for the next scheduled
+    refresh.
+  fields:
+    entry_id:
+      name: Account
+      description: >-
+        Limit the refresh to one configured HESCOM account. Leave empty to
+        refresh every account.
+      example: 4a1c0b9e2f7d4b8e9c3a5d6f7e8a9b0c
+      selector:
+        text:

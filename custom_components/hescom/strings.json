@@ -1,0 +1,61 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HESCOM account",
+        "description": "Enter the consumer account number printed on your HESCOM bill, for example 1234567890. The integration only reads the data the consumer portal already shows you.",
+        "data": {
+          "account_id": "Account number"
+        },
+        "data_description": {
+          "account_id": "The 10-digit consumer account number (digits only)."
+        }
+      }
+    },
+    "error": {
+      "invalid_account": "The account number must contain digits only.",
+      "invalid_auth": "HESCOM rejected the request signature. Try again in a few minutes.",
+      "cannot_connect": "Could not reach hescom.co.in. Check your connection and try again.",
+      "unknown": "Unexpected error. Check the Home Assistant log for details."
+    },
+    "abort": {
+      "already_configured": "This HESCOM account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HESCOM refresh settings",
+        "description": "Control how often the portal is polled and whether bill PDFs are saved to /config/www/hescom.",
+        "data": {
+          "scan_interval": "Normal refresh interval",
+          "bill_watch_interval": "Refresh interval while a bill is expected",
+          "bill_delay_interval": "Refresh interval when the bill is late",
+          "bill_watch_after_days": "Start watching this many days after the meter read",
+          "bill_watch_max_days": "Length of the expected billing window",
+          "archive_pdfs": "Save bill PDFs to /config/www/hescom"
+        },
+        "data_description": {
+          "scan_interval": "Used when no bill is expected and nothing is due.",
+          "bill_watch_interval": "Faster cadence inside the expected billing window, so a new bill is noticed quickly.",
+          "bill_delay_interval": "Cadence once the expected window has passed but the bill still has not appeared.",
+          "bill_watch_after_days": "Counted from the last meter reading date reported by HESCOM.",
+          "bill_watch_max_days": "How long after the watch start date a new bill is still considered on time.",
+          "archive_pdfs": "Archived PDFs are also served at /local/hescom/<bill id>.pdf."
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Refresh",
+      "description": "Fetch the latest HESCOM data now instead of waiting for the next scheduled refresh.",
+      "fields": {
+        "entry_id": {
+          "name": "Account",
+          "description": "Limit the refresh to one configured HESCOM account. Leave empty to refresh every account."
+        }
+      }
+    }
+  }
+}

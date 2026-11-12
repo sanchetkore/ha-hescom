@@ -1,0 +1,86 @@
+blueprint:
+  name: HESCOM – bill due soon reminder
+  description: >-
+    Once a day, remind you when a HESCOM bill is still unpaid and its due date
+    is within the chosen number of days. Point it at the `Due amount` sensor of
+    the account you care about; the sensor's `bill_due_date` attribute supplies
+    the deadline.
+  domain: automation
+  source_url: https://github.com/sanchetkore/ha-hescom/blob/main/blueprints/automation/hescom/hescom_bill_due_soon.yaml
+  input:
+    due_amount_entity:
+      name: Due amount sensor
+      description: >-
+        The HESCOM `Due amount` sensor for the account you care about.
+      selector:
+        entity:
+          domain: sensor
+    days_before:
+      name: Remind this many days early
+      default: 3
+      selector:
+        number:
+          min: 0
+          max: 30
+          step: 1
+          unit_of_measurement: days
+          mode: box
+    reminder_time:
+      name: Time of day
+      default: "09:00:00"
+      selector:
+        time:
+    notify_service:
+      name: Notify action
+      description: For example `notify.mobile_app_my_phone`.
+      default: notify.notify
+      selector:
+        text:
+    notification_title:
+      name: Notification title
+      default: HESCOM bill due soon
+      selector:
+        text:
+
+mode: single
+
+# Blueprint inputs are only substituted through `!input`, so anything used in a
+# template has to be copied into a variable first.
+variables:
+  due_amount_entity: !input due_amount_entity
+  days_before: !input days_before
+  notify_service: !input notify_service
+  notification_title: !input notification_title
+
+trigger:
+  - platform: time
+    at: !input reminder_time
+
+condition:
+  # Kept as one expression so the template emits a bare True/False rather than
+  # a whitespace-padded block, which is what the template condition expects.
+  # An overdue unpaid bill still fires: the money is owed either way.
+  - condition: template
+    value_template: >-
+      {{ states(due_amount_entity) | float(0) > 0
+         and state_attr(due_amount_entity, 'bill_due_date') is not none
+         and (as_datetime(state_attr(due_amount_entity, 'bill_due_date')).date() - now().date()).days <= (days_before | int) }}
+
+action:
+  - action: "{{ notify_service }}"
+    data:
+      title: "{{ notification_title }}"
+      message: >-
+        {% set due = state_attr(due_amount_entity, 'bill_due_date') %}
+        {% set days = (as_datetime(due).date() - now().date()).days %}
+        ₹{{ states(due_amount_entity) | float(0) | round(2) }}
+        {{ 'was due on' if days < 0 else 'is due on' }} {{ due }}
+        ({{
+          'today'
+          if days == 0
+          else (
+            'overdue by ' ~ (-days) ~ ' day' ~ ('' if days == -1 else 's')
+            if days < 0
+            else (days ~ ' day' ~ ('' if days == 1 else 's') ~ ' left')
+          )
+        }}).

@@ -1,0 +1,24 @@
+# Home Assistant
+.homeassistant/
+*.db
+*.log
+.secrets.yaml
+configuration.yaml
+ui-lovelace.yaml
+custom_components/hescom/__pycache__/
+custom_components/hescom/*.pyc
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

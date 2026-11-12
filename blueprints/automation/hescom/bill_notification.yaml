@@ -1,0 +1,77 @@
+blueprint:
+  name: HESCOM – new bill notification
+  description: >-
+    Notify you the moment the HESCOM integration sees a bill it has not seen
+    before. Fires on the `hescom_new_bill` event, which is raised once per new
+    bill id and persisted across restarts, so it will not repeat for a bill you
+    already have.
+  domain: automation
+  source_url: https://github.com/sanchetkore/ha-hescom/blob/main/blueprints/automation/hescom/bill_notification.yaml
+  input:
+    notify_service:
+      name: Notify action
+      description: >-
+        The notify action to call, for example `notify.mobile_app_my_phone`.
+      default: notify.notify
+      selector:
+        text:
+    account_filter:
+      name: Account number (optional)
+      description: >-
+        Only notify for this account. Leave empty to notify for every HESCOM
+        account you have configured.
+      default: ""
+      selector:
+        text:
+    include_pdf:
+      name: Mention the archived bill PDF
+      description: >-
+        Append the local PDF link when the integration has archived one. The
+        link only resolves if you have the `www` directory enabled.
+      default: true
+      selector:
+        boolean:
+    notification_title:
+      name: Notification title
+      default: New HESCOM bill
+      selector:
+        text:
+
+mode: queued
+max: 10
+
+# Blueprint inputs are only substituted through `!input`, so anything used in a
+# template has to be copied into a variable first.
+variables:
+  notify_service: !input notify_service
+  notification_title: !input notification_title
+  include_pdf: !input include_pdf
+  account_filter: !input account_filter
+  # ``default(..., true)`` also replaces None, which is what the event carries
+  # when HESCOM has not published a due date or PDF yet.
+  account_id: "{{ trigger.event.data.account_id | default('', true) }}"
+  pdf_url: "{{ trigger.event.data.pdf_url | default('', true) }}"
+  due_amount: "{{ trigger.event.data.due_amount | default(0, true) }}"
+  bill_due_date: "{{ trigger.event.data.bill_due_date | default('', true) }}"
+
+trigger:
+  - platform: event
+    event_type: hescom_new_bill
+
+condition:
+  - condition: template
+    value_template: >-
+      {{ (account_filter | string | trim) in ('', account_id | string) }}
+
+action:
+  - action: "{{ notify_service }}"
+    data:
+      title: "{{ notification_title }}"
+      message: >-
+        ₹{{ due_amount | float(0) | round(2) }} is due on
+        {{ bill_due_date if bill_due_date else 'a date HESCOM has not published yet' }}
+        for account {{ account_id }}.
+        {%- if include_pdf and pdf_url %}
+
+        Bill PDF: {{ pdf_url }}
+        {%- endif %}

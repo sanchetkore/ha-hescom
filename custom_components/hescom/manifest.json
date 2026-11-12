@@ -1,0 +1,13 @@
+{
+  "domain": "hescom",
+  "name": "HESCOM",
+  "codeowners": ["@sanchetkore"],
+  "config_flow": true,
+  "dependencies": ["http"],
+  "documentation": "https://github.com/sanchetkore/ha-hescom",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/sanchetkore/ha-hescom/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
